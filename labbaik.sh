@@ -1,16 +1,23 @@
 #!/bin/bash
 
-# 💠 Labbaik Facebook Cloner Tool Auto Installer
-# 👑 Developer: Mohammad Maaz
+# Labbaik FB Cloner Installer
+clear
+echo -e "\e[1;32m╭────────────────────────────────────────────╮"
+echo -e "\e[1;33m│      💥 Installing Labbaik FB Cloner       │"
+echo -e "\e[1;32m╰────────────────────────────────────────────╯"
+sleep 1
 
-echo "🔁 Downloading Labbaik Tool..."
+# Remove old version
 rm -rf Labbaik
 
+# Clone fresh
 git clone --depth=1 https://github.com/Labbaik757/Labbaik-Tool Labbaik
+
+# Enter folder
 cd Labbaik
 
-echo "📦 Installing required Python libraries..."
-pip install requests > /dev/null 2>&1
+# Permissions
+chmod +x *
 
-echo "🚀 Starting License System..."
+# Run tool
 python labbaik_license.py
