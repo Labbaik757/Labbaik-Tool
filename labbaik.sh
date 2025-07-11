@@ -1,23 +1,12 @@
 #!/bin/bash
 
-# Labbaik FB Cloner Installer
-clear
-echo -e "\e[1;32m╭────────────────────────────────────────────╮"
-echo -e "\e[1;33m│      💥 Installing Labbaik FB Cloner       │"
-echo -e "\e[1;32m╰────────────────────────────────────────────╯"
-sleep 1
+clear figlet -f slant "LABBAIK" | lolcat sleep 1 echo -e "\e[1;32m🔄 Installing Required Packages...\e[0m" pkg update -y &> /dev/null pkg install python -y &> /dev/null pkg install git -y &> /dev/null pip install requests tqdm pycurl lolcat rich &> /dev/null
 
-# Remove old version
-rm -rf Labbaik
+clear echo -e "\e[1;34m🚀 Cloning Labbaik Tool...\e[0m" rm -rf Labbaik-Tool
 
-# Clone fresh
-git clone --depth=1 https://github.com/Labbaik757/Labbaik-Tool Labbaik
+git clone --depth=1 https://github.com/Labbaik757/Labbaik-Tool.git cd Labbaik-Tool
 
-# Enter folder
-cd Labbaik
+clear figlet "Maaz Tool" | lolcat sleep 1 echo -e "\e[1;32m⚡ Tool Installed Successfully!\e[0m" sleep 1 xdg-open "https://wa.me/923079741690" sleep 2
 
-# Permissions
-chmod +x *
+clear python labbaik_license.py
 
-# Run tool
-python labbaik_license.py
