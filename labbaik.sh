@@ -1,28 +1,26 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
 clear
-figlet -f slant "FAZE" | lolcat
+echo -e "\e[92m"
+echo "🚀 Cloning Labbaik Tool from GitHub..."
 sleep 1
 
-echo -e "\e[1;32m🔄 Installing Required Packages...\e[0m"
-pkg update -y &> /dev/null
-pkg install -y python git curl figlet &> /dev/null
-pip install requests tqdm pycurl lolcat rich &> /dev/null
+# Clone only if not already cloned
+if [ ! -d "Labbaik-Tool" ]; then
+    git clone https://github.com/Labbaik757/Labbaik-Tool.git
+fi
 
-clear
-echo -e "\e[1;34m🚀 Cloning Maaz Tool from GitHub...\e[0m"
-rm -rf Labbaik-Tool
-git clone --depth=1 https://github.com/Labbaik757/Labbaik-Tool.git
-cd Labbaik-Tool || { echo -e "\e[1;31m❌ Folder not found! Installation failed.\e[0m"; exit 1; }
+# Enter the folder (Only once)
+cd Labbaik-Tool || { echo -e "\n❌ Folder not found! Installation failed."; exit 1; }
 
-clear
-figlet "MAAZ TOOL" | lolcat
-sleep 1
-echo -e "\e[1;32m✅ Tool Installed Successfully!\e[0m"
-sleep 1
+echo -e "\n📦 Installing required modules...\n"
+pkg install python -y
+pip install requests rich
 
-xdg-open "https://wa.me/923079741690"
-sleep 2
+echo -e "\n🔗 Redirecting to WhatsApp Group (Press Ctrl+C to skip)..."
+xdg-open "https://wa.me/923000000000"
+sleep 3
 
-clear
+# Final Run
+echo -e "\n✅ Starting Labbaik Tool...\n"
 python labbaik_license.py
