@@ -1,148 +1,73 @@
 #!/usr/bin/env python3
-# -- coding: utf-8 --
 
-import os
-import sys
-import time
-import uuid
-import json
-import requests
-import base64
-from datetime import datetime
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
+========== MAAZ TOOL LICENSE SCRIPT (labbaik_license.py) ==========
+
+import os, requests, time, base64, subprocess from datetime import datetime from rich.console import Console from rich.panel import Panel
 
 console = Console()
 
-# GitHub Raw Key File & Logs Config
-APPROVED_KEYS_URL = "https://raw.githubusercontent.com/Labbaik757/Labbaik-Official/main/keys/approved_keys.txt"
-LOG_UPLOAD_REPO = "Labbaik757/labbaik-logs"
-LOG_UPLOAD_PATH = "logs.txt"
-GITHUB_TOKEN = "ghp_xxxREPLACEMExxx"
+Display Banner
 
-# Banner
-BANNER = """[bold cyan]
-███████╗ █████╗ ███████╗███████╗
-██╔════╝██╔══██╗╚══███╔╝██╔════╝
-█████╗  ███████║  ███╔╝ █████╗  
-██╔══╝  ██╔══██║ ███╔╝  ██╔══╝  
-██║     ██║  ██║███████╗███████╗
-╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝
-     🔰 MAAZ TOOL 🔰
-[/bold cyan]"""
+BANNER = """[bold cyan] ███████╗ █████╗ ███████╗███████╗ ██╔════╝██╔══██╗╚══███╔╝██╔════╝ █████╗  ███████║  ███╔╝ █████╗
+██╔══╝  ██╔══██║ ███╔╝  ██╔══╝
+██║     ██║  ██║███████╗███████╗ ╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝ 🔰 MAAZ TOOL 🔰 """ console.print(Panel.fit(BANNER, title="License Verification", border_style="cyan"))
 
-def show_banner():
-    console.print(Panel(BANNER, style="bold cyan"))
+GitHub Config
 
-def fetch_approved_keys():
-    try:
-        response = requests.get(APPROVED_KEYS_URL)
-        if response.status_code == 200:
-            return response.text.splitlines()
-        return []
-    except:
-        return []
+GITHUB_USER = "Labbaik757" REPO_NAME = "Labbaik-Official" FILE_PATH = "keys/approved_keys.txt" RAW_KEYS_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/main/{FILE_PATH}" GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/contents/{FILE_PATH}" GITHUB_TOKEN = "ghp_yourGitHubTokenHere"  # 🔐 Replace with actual token HEADERS = {"Authorization": f"token {GITHUB_TOKEN}"}
 
-def is_key_valid(user_key):
-    approved_keys = fetch_approved_keys()
-    for line in approved_keys:
-        if line.strip() == user_key.strip():
-            return True
-    return False
+KEY_FILE = ".maaz_key.txt" LOG_FILE = "maaz_logs.txt" CLONE_SCRIPT = "clone_module.py"
 
-def upload_log(username, key):
-    try:
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ip = requests.get("https://api.ipify.org").text.strip()
-        log_line = f"[{now}] USERNAME: {username} | IP: {ip} | KEY: {key}\n"
+========== License System Functions ==========
 
-        url = f"https://api.github.com/repos/{LOG_UPLOAD_REPO}/contents/{LOG_UPLOAD_PATH}"
-        headers = {
-            "Authorization": f"token {GITHUB_TOKEN}",
-            "Accept": "application/vnd.github.v3+json"
-        }
+def fetch_key_list(): try: res = requests.get(RAW_KEYS_URL) if res.status_code == 404: print("❌ GitHub key file missing. Auto-creating...") create_github_file(FILE_PATH, "") return [] return res.text.strip().splitlines() if res.status_code == 200 else [] except Exception as e: print("❌ Error loading keys:", e) return []
 
-        res = requests.get(url, headers=headers)
-        if res.status_code == 200:
-            sha = res.json()['sha']
-            old_content = requests.get(res.json()['download_url']).text
-            updated_content = old_content + log_line
+def create_github_file(path, content): try: api_path = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/contents/{path}" encoded = base64.b64encode(content.encode()).decode() payload = { "message": f"🆕 Auto-created missing file: {path}", "content": encoded } res = requests.put(api_path, headers=HEADERS, json=payload) if res.status_code in [200, 201]: print(f"✅ Created '{path}' on GitHub.") else: print("⚠️ Could not create GitHub file:", res.text) except Exception as e: print("❌ Error creating GitHub file:", e)
+
+def clean_expired_keys(lines): valid = [] today = datetime.today().date() for line in lines: try: key, expiry = line.strip().split("|") if datetime.strptime(expiry.strip(), "%Y-%m-%d").date() >= today: valid.append(f"{key.strip()}|{expiry.strip()}") except: continue return valid
+
+def get_file_sha(): try: res = requests.get(GITHUB_API_URL, headers=HEADERS) return res.json().get("sha") except: return None
+
+def update_github_key_file(new_lines, sha): try: content = "\n".join(new_lines) encoded = base64.b64encode(content.encode()).decode() payload = { "message": "🔁 Auto-remove expired keys - MAAZ Tool", "content": encoded, "sha": sha } res = requests.put(GITHUB_API_URL, headers=HEADERS, json=payload) if res.status_code == 200: print("✅ Expired keys removed from GitHub.") else: print("⚠️ GitHub update failed:", res.text) except Exception as e: print("❌ Failed to push cleaned keys:", e)
+
+def auto_remove_expired_keys(): key_lines = fetch_key_list() valid_keys = clean_expired_keys(key_lines) if len(valid_keys) < len(key_lines): sha = get_file_sha() if sha: update_github_key_file(valid_keys, sha)
+
+def check_key_approval(local_key, key_list): today = datetime.today().date() for line in key_list: try: key, expiry = line.strip().split("|") if key.strip() == local_key: exp_date = datetime.strptime(expiry.strip(), "%Y-%m-%d").date() return exp_date >= today except: continue return False
+
+def ensure_required_files(): if not os.path.exists(KEY_FILE): print("⚠️ Missing key file, generating...") key = f"MAAZ-{str(int(time.time()))[-4:]}" with open(KEY_FILE, "w") as f: f.write(key) if not os.path.exists(LOG_FILE): with open(LOG_FILE, "w") as f: f.write("") if not os.path.exists(CLONE_SCRIPT): with open(CLONE_SCRIPT, "w") as f: f.write("print('🔁 Placeholder: clone_module.py is missing.')") print("⚠️ Created placeholder for clone_module.py")
+
+def get_ip(): try: return requests.get("https://api.ipify.org").text.strip() except: return "UNKNOWN"
+
+def log_user_data(key): ip = get_ip() now = datetime.now().strftime("%Y-%m-%d %H:%M:%S") log_line = f"{key} | {ip} | {now}\n" with open(LOG_FILE, "a") as f: f.write(log_line)
+
+========== Main Logic ==========
+
+def main(): ensure_required_files() key = open(KEY_FILE).read().strip()
+
+if not key:
+    print("❌ License key missing. Please contact admin.")
+    return
+
+print("🧹 Cleaning expired license keys from GitHub...")
+auto_remove_expired_keys()
+
+print(f"\n🔐 Verifying Your License Key: {key}")
+while True:
+    approved_keys = fetch_key_list()
+    if check_key_approval(key, approved_keys):
+        print("✅ Key Approved! Welcome to 💥 MAAZ TOOL 💥")
+        log_user_data(key)
+
+        # ✅ Automatically Run Cloning Module
+        if os.path.exists(CLONE_SCRIPT):
+            print("🚀 Starting Cloning Module...\n")
+            subprocess.run(["python", CLONE_SCRIPT])
         else:
-            sha = None
-            updated_content = log_line
-
-        encoded = base64.b64encode(updated_content.encode()).decode()
-
-        data = {
-            "message": "Update logs.txt",
-            "content": encoded,
-            "branch": "main"
-        }
-        if sha:
-            data["sha"] = sha
-
-        requests.put(url, headers=headers, json=data)
-    except:
-        pass
-
-def get_env_or_warn(env_var, prompt_text):
-    value = os.environ.get(env_var)
-    if value is not None:
-        return value.strip()
+            print("❌ clone_module.py not found! Please place it in the same folder.")
+        break
     else:
-        console.print(f"[bold yellow]⚠️ Environment variable '{env_var}' not found. Skipping input in non-interactive environment.[/bold yellow]")
-        return None
+        print("⏳ Waiting for approval... Retrying in 20 seconds.")
+        time.sleep(20)
 
-def dashboard(username, key):
-    os.system('clear' if os.name == 'posix' else 'cls')
-    show_banner()
-    console.print(f"[bold green]\U0001f9d1 User:[/bold green] [yellow]{username}[/yellow]")
-    console.print(f"[bold green]\U0001f510 Your Key:[/bold green] [yellow]{key}[/yellow]")
-    console.print("\n[bold magenta]Choose Cloning Method:[/bold magenta]\n")
+if name == "main": main()
 
-    table = Table(show_header=True, header_style="bold blue")
-    table.add_column("Option")
-    table.add_column("Method")
-    table.add_row("1", "OLD METHOD")
-    table.add_row("2", "SERIES METHOD")
-    table.add_row("3", "RANDOM METHOD")
-    table.add_row("4", "COMBO GENERATOR")
-    table.add_row("5", "UID DUMP")
-    table.add_row("0", "Exit")
-    console.print(table)
-
-    opt = os.environ.get("CLONE_OPTION")
-    if opt is None:
-        console.print("[bold yellow]⚠️ Environment variable 'CLONE_OPTION' not set. Defaulting to '0' (exit).[/bold yellow]")
-        opt = "0"
-
-    opt = opt.strip()
-    if opt == "0":
-        console.print("[bold red]👋 Exiting...[/bold red]")
-        return
-    elif opt in ["1", "2", "3", "4", "5"]:
-        os.system(f"python clone_module.py {opt}")
-    else:
-        console.print("[bold red]❌ Invalid option selected.[/bold red]")
-
-def main():
-    os.system('clear' if os.name == 'posix' else 'cls')
-    show_banner()
-    console.print("[bold green]\U0001f511 Enter your license key to continue...[/bold green]")
-
-    user_key = get_env_or_warn("MAAZ_LICENSE_KEY", "🔐 Enter License Key: ")
-    if not user_key:
-        console.print("[bold red]❌ No license key provided. Exiting.[/bold red]")
-        return
-
-    if is_key_valid(user_key):
-        username = os.getenv("USERNAME") or os.getenv("USER") or "User"
-        upload_log(username, user_key)
-        dashboard(username, user_key)
-    else:
-        console.print("[bold red]❌ Invalid or unapproved key! Contact admin.[/bold red]")
-        console.print("\n[bold yellow]📞 Contact:[/bold yellow] WhatsApp +923079741690 or Telegram @LabbaikSupport")
-
-if __name__ == "__main__":
-    main()
