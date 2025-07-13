@@ -1,64 +1,34 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-clear
-echo -e "\e[92m"
-echo "🚀 Installing Labbaik Tool with Auto-Fix Mode...\n"
-sleep 1
+clear echo -e "\e[92m" echo "🚀 Cloning MAAZ Tool from GitHub..." sleep 1
 
-# Fix DNS/GitHub Internet Access Issue
-echo "🔧 Checking internet..."
-ping -c 1 google.com > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-    echo "⚠️ DNS error detected. Fixing..."
-    echo "nameserver 8.8.8.8" > $PREFIX/etc/resolv.conf
-    sleep 1
-fi
+Clone or update the tool
 
-# Delete old corrupted folder if exists
-if [ -d "Labbaik" ]; then
-    echo "🧹 Removing old Labbaik folder..."
-    rm -rf Labbaik
-fi
+if [ -d "Labbaik-Tool" ]; then echo "🔁 Updating existing folder..." cd Labbaik-Tool && git pull else git clone https://github.com/Labbaik757/Labbaik-Tool.git || { echo -e "\n❌ Failed to clone. Attempting to create folder manually..." mkdir Labbaik-Tool && cd Labbaik-Tool || { echo "❌ Could not create or enter fallback folder. Exiting."; exit 1; } } cd Labbaik-Tool fi
 
-# Clone fresh
-echo "📥 Cloning latest tool from GitHub..."
-git clone https://github.com/Labbaik757/Labbaik-Tool.git Labbaik || {
-    echo "❌ GitHub clone failed. Check internet."
-    exit 1
-}
+Ensure required files exist
 
-# Move inside tool folder
-cd Labbaik || {
-    echo "❌ Folder not found. Exiting."
-    exit 1
-}
+echo -e "\n🛠 Checking essential files..." REQUIRED_FILES=("labbaik_license.py" "clone_module.py" ".maaz_key.txt" "maaz_logs.txt")
 
-# Check & create missing main Python file
-if [ ! -f labbaik_license.py ]; then
-    echo "⚠️ Missing labbaik_license.py — creating dummy file..."
-    cat > labbaik_license.py <<EOF
-print("🔧 Auto-created file: labbaik_license.py — Please replace with real code.")
-EOF
-    sleep 1
-fi
+for FILE in "${REQUIRED_FILES[@]}"; do if [ ! -f "$FILE" ]; then echo "⚠️ Missing file: $FILE — creating placeholder." case $FILE in "labbaik_license.py") echo -e "print('🔒 Placeholder: License script missing.')" > "$FILE" ;; "clone_module.py") echo -e "print('🔁 Placeholder: Cloning module missing.')" > "$FILE" ;; ".maaz_key.txt") echo "MAAZ-$(shuf -i 100-999 -n 1)" > "$FILE" ;; "maaz_logs.txt") echo "" > "$FILE" ;; esac fi sleep 0.3 done
 
-# Install Python if missing
-command -v python >/dev/null 2>&1 || pkg install python -y
+Auto fix Python if missing
 
-# Retry pip module installation
-pip install requests rich || {
-    echo "⚠️ Retrying pip install..."
-    pip install requests rich --break-system-packages || {
-        echo "❌ Module install failed."
-        exit 1
-    }
-}
+if ! command -v python &>/dev/null; then echo "⚙️ Python not found. Installing Python..." pkg install python -y fi
 
-# WhatsApp redirect
-echo -e "\n🔗 Redirecting to WhatsApp Group (Press Ctrl+C to skip)..."
-xdg-open "https://wa.me/923000000000"
-sleep 2
+Auto fix pip if missing
 
-# Run main script
-echo -e "\n✅ Starting Labbaik Tool...\n"
-python labbaik_license.py
+if ! command -v pip &>/dev/null; then echo "⚙️ Pip not found. Installing pip..." pkg install python-pip -y fi
+
+Install required modules
+
+echo -e "\n📦 Installing Python modules (requests, rich)...\n" pip install requests rich --quiet || { echo "❌ Failed to install modules. Trying pip fix..." python -m ensurepip --default-pip pip install requests rich --quiet }
+
+Optional: WhatsApp redirect
+
+echo -e "\n🔗 Redirecting to WhatsApp Group (Press Ctrl+C to skip)..." sleep 2 xdg-open "https://chat.whatsapp.com/CFGuz089SUe5npFZDS8iTh" || echo "(WhatsApp skipped)"
+
+Run the license system script
+
+echo -e "\n✅ Starting MAAZ Tool...\n" python labbaik_license.py || { echo "❌ Error running labbaik_license.py. Attempting auto-fix..." chmod +x labbaik_license.py python labbaik_license.py }
+
