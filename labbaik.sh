@@ -23,4 +23,4 @@ sleep 3
 
 # Final Run
 echo -e "\n✅ Starting Labbaik Tool...\n"
-python labbaik_license.py
+python maaz_license.py
